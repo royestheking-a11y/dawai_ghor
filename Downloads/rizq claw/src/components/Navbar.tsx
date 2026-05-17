@@ -37,28 +37,28 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-maroon-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-maroon-100 shadow-sm">
+      <div className="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20 gap-4">
           
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-maroon-600 to-maroon-900 flex items-center justify-center p-1.5 shadow-md shadow-maroon-600/20">
+          <div className="flex items-center space-x-3.5 cursor-pointer shrink-0" onClick={() => setActiveTab('dashboard')}>
+            <div className="w-12 h-12 rounded-2xl bg-white border-2 border-maroon-200 flex items-center justify-center p-1.5 shadow-lg shadow-maroon-950/10 hover:scale-105 transition-transform">
               <img src="/rizq claw.png" alt="RizQ Claw Logo" className="w-full h-full object-contain" />
             </div>
-            <div>
+            <div className="flex flex-col">
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-xl tracking-tight text-maroon-950 font-['Outfit']">RizQ Claw</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-maroon-100 text-maroon-800 px-2 py-0.5 rounded-full border border-maroon-200">
+                <span className="font-extrabold text-2xl tracking-tight text-maroon-950 font-['Outfit'] whitespace-nowrap">RizQ Claw</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-maroon-100 text-maroon-800 px-2.5 py-0.5 rounded-full border border-maroon-200 shrink-0 font-mono shadow-2xs">
                   v1 Hybrid AI
                 </span>
               </div>
-              <p className="text-[11px] text-maroon-600 font-medium">RizQara Tech Acquisition Agent</p>
+              <p className="text-xs text-maroon-700 font-extrabold hidden sm:block whitespace-nowrap tracking-wide">RizQara Tech Acquisition Agent</p>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden xl:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-1.5 overflow-visible">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -66,18 +66,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative ${
+                  className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-xs xl:text-sm font-extrabold transition-all duration-200 relative whitespace-nowrap ${
                     isActive 
-                      ? 'bg-maroon-600 text-white shadow-md shadow-maroon-600/20' 
-                      : 'text-gray-600 hover:text-maroon-900 hover:bg-maroon-50'
+                      ? 'bg-maroon-700 text-white shadow-md shadow-maroon-700/25 scale-102' 
+                      : 'text-gray-600 hover:text-maroon-950 hover:bg-maroon-50/80'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-gray-500'}`} />
                   <span>{tab.label}</span>
                   {tab.badge !== undefined && (
-                    <span className={`absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
-                      isActive ? 'bg-white text-maroon-600' : 'bg-maroon-600 text-white'
-                    }`}>
+                    <span className="absolute -top-2.5 -right-2 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-extrabold shadow-md border-2 border-white bg-red-600 text-white z-10 font-mono">
                       {tab.badge}
                     </span>
                   )}
@@ -87,29 +85,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* Actions & Status */}
-          <div className="flex items-center space-x-3">
-            <div className="hidden sm:flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200 text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Trust Scoring Active</span>
+          <div className="flex items-center space-x-3 shrink-0">
+            <div className="hidden md:flex items-center space-x-2 bg-emerald-50 text-emerald-800 px-3.5 py-1.5 rounded-full border border-emerald-200 text-xs font-extrabold shadow-2xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="whitespace-nowrap">Trust Scoring Active</span>
             </div>
 
             <button
               onClick={() => setActiveTab('settings')}
-              className={`p-2 rounded-lg border transition-all ${
+              className={`p-2.5 rounded-xl border transition-all shadow-2xs ${
                 activeTab === 'settings'
-                  ? 'bg-maroon-600 text-white border-maroon-600'
-                  : 'border-maroon-200 text-maroon-900 hover:bg-maroon-50'
+                  ? 'bg-maroon-700 text-white border-maroon-700 shadow-md shadow-maroon-700/20'
+                  : 'bg-white border-maroon-200 text-maroon-900 hover:bg-maroon-50'
               }`}
               title="System Settings & API Configuration"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-5 h-5 shrink-0" />
             </button>
           </div>
 
         </div>
 
         {/* Mobile menu overflow navigation */}
-        <div className="flex xl:hidden overflow-x-auto py-2 space-x-1 border-t border-gray-100 scrollbar-none">
+        <div className="flex lg:hidden overflow-x-auto py-2.5 space-x-2 border-t border-gray-100 scrollbar-none">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -117,16 +115,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all relative shrink-0 ${
                   isActive 
-                    ? 'bg-maroon-600 text-white shadow-sm shadow-maroon-600/20' 
-                    : 'text-gray-600 hover:bg-maroon-50'
+                    ? 'bg-maroon-700 text-white shadow-sm shadow-maroon-700/20' 
+                    : 'text-gray-600 bg-gray-50/80 hover:bg-maroon-50'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && (
-                  <span className="bg-maroon-100 text-maroon-800 ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
+                  <span className="bg-red-600 text-white ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold font-mono border border-white/20">
                     {tab.badge}
                   </span>
                 )}
