@@ -11,7 +11,11 @@ import {
   ArrowRight,
   RefreshCw,
   Building2,
-  PhoneCall
+  PhoneCall,
+  Star,
+  TrendingUp,
+  Globe,
+  AlertTriangle
 } from 'lucide-react';
 
 interface LeadHunterProps {
@@ -19,6 +23,22 @@ interface LeadHunterProps {
   onOpenAddModal: () => void;
   onSelectLeadForAudit: (lead: Lead) => void;
 }
+
+// A large pool of realistic Bangladeshi business mock data
+const LEAD_POOL = [
+  { name: 'Kachchi Bhai Dhanmondi', cat: 'Restaurant', loc: 'Dhanmondi 27, Dhaka', rating: 4.7, reviews: 892, phone: '+880 1711-223344', dm: 'Kamal Hossain', dmTitle: 'Managing Director', need: 'No QR table ordering, long manual wait time for phone orders', service: 'QR Ordering System + Kitchen Display POS', value: 950, score: 91 },
+  { name: 'PanAsia Sushi Bar Gulshan', cat: 'Restaurant', loc: 'Gulshan 2, Dhaka', rating: 4.5, reviews: 340, phone: '+880 1819-445566', dm: 'Arman Rahman', dmTitle: 'Operations Head', need: 'No online reservation system, peak hour crowding unmanaged', service: 'Smart Table Reservation Engine + SMS Automation', value: 1100, score: 87 },
+  { name: 'LabAid Specialist Hospital', cat: 'Clinic', loc: 'Mirpur 10, Dhaka', rating: 4.3, reviews: 1230, phone: '+880 1678-112233', dm: 'Dr. Fazlur Rahman', dmTitle: 'Medical Director', need: 'Patients call manually for appointments, no online slot booking', service: 'Doctor Appointment Booking Engine + Automated SMS', value: 2200, score: 89 },
+  { name: 'CarePoint Diagnostic Center', cat: 'Clinic', loc: 'Banani 11, Dhaka', rating: 4.1, reviews: 567, phone: '+880 1912-334455', dm: 'Dr. Sadia Islam', dmTitle: 'Clinic Administrator', need: '7-second mobile load time, no digital report delivery system', service: 'Fast Medical Portal + Automated Digital Report Delivery', value: 1800, score: 84 },
+  { name: 'FitZone Premium Gym', cat: 'Gym', loc: 'Uttara Sector 11, Dhaka', rating: 4.6, reviews: 289, phone: '+880 1515-667788', dm: 'Sohel Rana', dmTitle: 'Branch Manager', need: 'Manual paper-based membership renewals, no online payment', service: 'Gym CRM + Automated Membership & Billing System', value: 750, score: 85 },
+  { name: 'PowerFlex Fitness Mirpur', cat: 'Gym', loc: 'Mirpur 12, Dhaka', rating: 4.2, reviews: 145, phone: '+880 1716-889900', dm: 'Raju Ahmed', dmTitle: 'Owner', need: 'No mobile app for class booking, trainers book manually via phone', service: 'Fitness App + Class Booking Automation', value: 680, score: 82 },
+  { name: 'Glow Beauty Salon Gulshan', cat: 'Salon', loc: 'Gulshan 1, Dhaka', rating: 4.8, reviews: 412, phone: '+880 1911-001122', dm: 'Nasrin Akter', dmTitle: 'Salon Owner', need: 'Appointment cancellations lost manually, no digital booking system', service: 'Smart Appointment Booking + Automated Reminder System', value: 600, score: 88 },
+  { name: 'Al-Madina Pharmacy Barguna', cat: 'Pharmacy', loc: 'Barguna Sadar, Barishal', rating: 4.0, reviews: 78, phone: '+880 1711-998877', dm: 'Mizanur Rahman', dmTitle: 'Pharmacy Manager', need: 'No digital inventory system, medicine stockouts untracked', service: 'Pharmacy POS + Inventory & Expiry Tracking System', value: 550, score: 80 },
+  { name: 'Skyline Towers Real Estate', cat: 'Real Estate', loc: 'Bashundhara R/A, Dhaka', rating: 4.4, reviews: 203, phone: '+880 1812-445566', dm: 'Imtiaz Karim', dmTitle: 'Sales Director', need: 'No virtual property tour system, slow website with no lead capture form', service: 'Real Estate Portal + Virtual Tour + Lead Automation', value: 3500, score: 90 },
+  { name: 'Sunrise English Medium School', cat: 'School', loc: 'Sylhet Sadar', rating: 4.5, reviews: 167, phone: '+880 1615-778899', dm: 'Principal Jalil', dmTitle: 'School Principal', need: 'Paper-based admission forms, no parent communication system', service: 'School ERP + Online Admission + Parent Portal', value: 1400, score: 86 },
+  { name: 'Crust & Crumbs Bakery Chittagong', cat: 'Restaurant', loc: 'GEC Circle, Chittagong', rating: 4.6, reviews: 523, phone: '+880 1819-112244', dm: 'Farida Begum', dmTitle: 'Business Owner', need: 'Custom cake orders tracked manually in notebook, no online catalog', service: 'Online Custom Order Portal + Delivery Tracking System', value: 720, score: 83 },
+  { name: 'Doctors Point Clinic Rajshahi', cat: 'Clinic', loc: 'Rajshahi Natore Road', rating: 4.2, reviews: 345, phone: '+880 1716-334455', dm: 'Dr. Aminul Islam', dmTitle: 'Clinic Founder', need: 'No digital prescription system, paper files getting lost', service: 'Digital Prescription + Electronic Health Record System', value: 1600, score: 85 },
+];
 
 export const LeadHunter: React.FC<LeadHunterProps> = ({
   onAddLeads,
@@ -30,96 +50,94 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [isSearching, setIsSearching] = useState(false);
   const [harvestedResults, setHarvestedResults] = useState<Lead[]>([]);
+  const [progressMsg, setProgressMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [progressStep, setProgressStep] = useState<number>(0);
 
   const simulateLiveHarvesting = () => {
     setIsSearching(true);
-    setTimeout(() => {
-      setIsSearching(false);
-      const idSuffix1 = Date.now().toString().slice(-4);
-      const idSuffix2 = (Date.now() + 100).toString().slice(-4);
+    setHarvestedResults([]);
+    setSuccessMsg(null);
+    setProgressStep(0);
 
-      const scraped1: Lead = {
-        id: `scraped-live-${idSuffix1}`,
-        businessName: searchTerm ? `${searchTerm} Express` : 'Takeout Banani',
-        category: categoryFilter === 'All' ? 'Restaurant' : (categoryFilter as LeadCategory),
-        location: locationFilter === 'All' ? 'Banani 11, Dhaka' : `${locationFilter}, Bangladesh`,
-        phone: '+880 1711-45' + idSuffix1.slice(0, 2),
-        email: `contact@${searchTerm ? searchTerm.toLowerCase().replace(/[^a-z]/g, '') : 'takeout'}.com`,
-        website: '',
-        facebook: 'https://facebook.com/' + (searchTerm ? searchTerm.toLowerCase().replace(/[^a-z]/g, '') : 'takeoutbanani'),
-        whatsapp: '+880171145' + idSuffix1.slice(0, 2),
-        rating: 4.4,
-        reviewCount: 380,
-        score: 88,
-        status: 'New',
-        needDetected: 'No online food delivery portal or automated WhatsApp ordering system',
-        serviceRecommended: 'Instant QR Menu & Delivery Management Dashboard',
-        aiMessageDraft: `Assalamu Alaikum ${searchTerm || 'Takeout'} management,\n\nI was reviewing your Google rating (4.4 stars across 380 customer reviews) in ${locationFilter === 'All' ? 'Banani' : locationFilter}. I noticed you rely on manual phone calls or third-party apps taking heavy commissions.\n\nRizQara Tech can deploy an instant zero-commission WhatsApp QR ordering menu.\n\nCould I send over a 2-minute video demo?`,
-        outreachChannel: 'WhatsApp',
-        approved: false,
-        followUpStage: 'None',
-        notes: ['Harvested live via Google Maps scraping cluster.'],
-        auditDetails: {
-          websiteExists: false,
-          speedScore: 0,
-          isMobileFriendly: false,
-          hasOnlineOrder: false,
-          hasWhatsApp: false,
-          hasBookingSystem: false,
-          hasGoogleReviewsReply: false,
-          fbActive: true,
-          seoScore: 0
-        },
-        decisionMaker: 'Tanvir Ahmed',
-        decisionMakerTitle: 'Managing Partner',
-        estimatedDealValue: 750,
-        createdVia: 'Google Places'
-      };
+    const steps = [
+      `🔍 Querying Google Places API v2 for "${searchTerm || 'businesses'}" in ${locationFilter === 'All' ? 'Bangladesh' : locationFilter}...`,
+      `📊 Cross-referencing Facebook Pages directory cluster...`,
+      `🔐 Running authenticity verification & spam filter...`,
+      `⚡ Calculating RizQ Claw Trust Scores for each prospect...`,
+      `✅ Harvest complete! Injecting verified leads into CRM pipeline...`,
+    ];
 
-      const scraped2: Lead = {
-        id: `scraped-live-${idSuffix2}`,
-        businessName: searchTerm ? `${searchTerm} Dental Care` : 'LabAid Diagnostic Mirpur',
-        category: 'Clinic',
-        location: locationFilter === 'All' ? 'Mirpur 10, Dhaka' : `${locationFilter}, Bangladesh`,
-        phone: '+880 1819-22' + idSuffix2.slice(0, 2),
-        email: `admin@${searchTerm ? searchTerm.toLowerCase().replace(/[^a-z]/g, '') : 'labaid'}.com.bd`,
-        website: 'https://' + (searchTerm ? searchTerm.toLowerCase().replace(/[^a-z]/g, '') : 'labaid') + '.com',
-        facebook: 'https://facebook.com/' + (searchTerm ? searchTerm.toLowerCase().replace(/[^a-z]/g, '') : 'labaidmirpur'),
-        whatsapp: '+880181922' + idSuffix2.slice(0, 2),
-        rating: 4.2,
-        reviewCount: 512,
-        score: 84,
-        status: 'New',
-        needDetected: 'Website takes 7 seconds to load on mobile, no automated doctor appointment scheduling',
-        serviceRecommended: 'Doctor Appointment Booking Engine + Automated WhatsApp Reminders',
-        aiMessageDraft: `Assalamu Alaikum ${searchTerm || 'LabAid'} management,\n\nI visited your digital portal in ${locationFilter === 'All' ? 'Mirpur' : locationFilter} and noticed strong local search presence (512 reviews). However, patients must call your hotline manually to confirm doctor slots.\n\nRizQara Tech can integrate an automated WhatsApp booking engine directly onto your profile.\n\nWould you be open to a 2-minute walkthrough?`,
-        outreachChannel: 'WhatsApp',
-        approved: false,
-        followUpStage: 'None',
-        notes: ['Harvested live via Facebook & Directory search cluster.'],
-        auditDetails: {
-          websiteExists: true,
-          speedScore: 42,
-          isMobileFriendly: true,
-          hasOnlineOrder: false,
-          hasWhatsApp: false,
-          hasBookingSystem: false,
-          hasGoogleReviewsReply: true,
-          fbActive: true,
-          seoScore: 45
-        },
-        decisionMaker: 'Dr. Shahinur Rahman',
-        decisionMakerTitle: 'Medical Director',
-        estimatedDealValue: 1250,
-        createdVia: 'Website Scraper'
-      };
+    let i = 0;
+    const stepInterval = setInterval(() => {
+      setProgressMsg(steps[i]);
+      setProgressStep(i + 1);
+      i++;
+      if (i >= steps.length) {
+        clearInterval(stepInterval);
 
-      setHarvestedResults([scraped1, scraped2]);
-      onAddLeads([scraped1, scraped2]);
-      setSuccessMsg(`🚀 Successfully harvested & audited 2 live businesses matching '${searchTerm || 'General'}' in ${locationFilter}.`);
-      setTimeout(() => setSuccessMsg(null), 6000);
-    }, 2000);
+        // Pick leads from pool, filter by category if set, inject randomness
+        const filtered = LEAD_POOL.filter(p => {
+          const catMatch = categoryFilter === 'All' || p.cat === categoryFilter;
+          const locMatch = locationFilter === 'All' || p.loc.toLowerCase().includes(locationFilter.toLowerCase());
+          const termMatch = !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.cat.toLowerCase().includes(searchTerm.toLowerCase());
+          return catMatch || locMatch || termMatch;
+        });
+
+        // Take 3–5 random ones
+        const pool = filtered.length >= 3 ? filtered : LEAD_POOL;
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        const picked = shuffled.slice(0, Math.floor(Math.random() * 2) + 3);
+
+        const newLeads: Lead[] = picked.map((p, idx) => {
+          const suffix = (Date.now() + idx * 100).toString().slice(-4);
+          return {
+            id: `hunter-${suffix}`,
+            businessName: p.name,
+            category: p.cat as LeadCategory,
+            location: locationFilter !== 'All' && !p.loc.toLowerCase().includes(locationFilter.toLowerCase()) ? `${locationFilter}, Bangladesh` : p.loc,
+            phone: p.phone,
+            email: `info@${p.name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 12)}.com`,
+            website: p.score > 85 ? `https://${p.name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 12)}.com` : '',
+            facebook: `https://facebook.com/${p.name.toLowerCase().replace(/[^a-z]/g, '').slice(0, 15)}`,
+            whatsapp: p.phone.replace(/ /g, ''),
+            rating: p.rating,
+            reviewCount: p.reviews,
+            score: p.score,
+            status: 'New',
+            needDetected: p.need,
+            serviceRecommended: p.service,
+            aiMessageDraft: `Assalamu Alaikum ${p.dm || 'Management Team'},\n\nI was reviewing your Google Maps profile for ${p.name} in ${p.loc}. With ${p.reviews} customer reviews and a strong ${p.rating}⭐ rating, your business clearly has real momentum.\n\nHowever, I noticed: ${p.need.toLowerCase()}.\n\nRizQara Tech builds exactly what your business needs — ${p.service} — at a fixed transparent price with lifetime support.\n\nCould I send over a 2-minute free demo video specifically built for your ${p.cat.toLowerCase()} business?`,
+            outreachChannel: 'Email',
+            approved: false,
+            followUpStage: 'None',
+            notes: [`Harvested via ${Math.random() > 0.5 ? 'Google Places API v2' : 'Facebook Pages Directory'} cluster.`],
+            auditDetails: {
+              websiteExists: p.score > 85,
+              speedScore: p.score > 85 ? Math.floor(Math.random() * 30 + 40) : 0,
+              isMobileFriendly: p.score > 83,
+              hasOnlineOrder: false,
+              hasWhatsApp: p.score > 88,
+              hasBookingSystem: false,
+              hasGoogleReviewsReply: p.reviews > 400,
+              fbActive: p.reviews > 200,
+              seoScore: Math.floor(p.score * 0.6)
+            },
+            decisionMaker: p.dm,
+            decisionMakerTitle: p.dmTitle,
+            estimatedDealValue: p.value,
+            createdVia: 'Google Places'
+          };
+        });
+
+        setHarvestedResults(newLeads);
+        onAddLeads(newLeads);
+        setProgressMsg(null);
+        setSuccessMsg(`🚀 ${newLeads.length} verified prospects harvested, trust-scored & injected into CRM pipeline!`);
+        setIsSearching(false);
+        setTimeout(() => setSuccessMsg(null), 7000);
+      }
+    }, 600);
   };
 
   return (
@@ -136,7 +154,7 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
             Prospect Harvester
           </h1>
           <p className="text-gray-600 text-sm mt-1 max-w-2xl">
-            Search Google Maps, Facebook Pages, and LinkedIn across Bangladeshi regions. Instantly calculate trust scores and discover businesses needing digital upgrades.
+            Search Google Maps, Facebook Pages, and LinkedIn across Bangladesh. Instantly calculate trust scores and surface businesses with verified digital service deficits.
           </p>
         </div>
 
@@ -149,8 +167,24 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
         </button>
       </div>
 
+      {/* Progress Indicator */}
+      {progressMsg && (
+        <div className="bg-maroon-50 border border-maroon-200 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center space-x-3">
+            <RefreshCw className="w-4 h-4 animate-spin text-maroon-700 shrink-0" />
+            <span className="text-sm font-bold text-maroon-900 font-mono">{progressMsg}</span>
+          </div>
+          <div className="w-full bg-maroon-200 rounded-full h-1.5">
+            <div
+              className="bg-maroon-700 h-1.5 rounded-full transition-all duration-500"
+              style={{ width: `${(progressStep / 5) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {successMsg && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-800 text-white font-semibold text-sm shadow-xl flex items-center space-x-3 animate-bounce">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-800 text-white font-semibold text-sm shadow-xl flex items-center space-x-3">
           <CheckCircle2 className="w-6 h-6 text-yellow-300 shrink-0" />
           <span>{successMsg}</span>
         </div>
@@ -168,7 +202,8 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="e.g. Sultan's Dine, Star Kabab, Dental..."
+                onKeyDown={(e) => e.key === 'Enter' && simulateLiveHarvesting()}
+                placeholder="e.g. Sultan's Dine, Dental Clinic, Gym..."
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-sm font-semibold text-maroon-950 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all"
               />
             </div>
@@ -210,6 +245,7 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
               <option value="Salon">Salon &amp; Spa</option>
               <option value="Real Estate">Real Estate</option>
               <option value="School">School &amp; Coaching</option>
+              <option value="Pharmacy">Pharmacy</option>
             </select>
           </div>
 
@@ -218,7 +254,7 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-100">
           <div className="flex items-center space-x-2 text-xs text-gray-500 w-full sm:w-auto">
             <Sliders className="w-4 h-4 text-maroon-600 shrink-0" />
-            <span>Scraping Sources: <strong className="text-maroon-950">Google Places API v2 &bull; Meta Pages API &bull; LinkedIn Company Directory</strong></span>
+            <span>Sources: <strong className="text-maroon-950">Google Places v2 &bull; Meta Pages API &bull; LinkedIn Directory</strong></span>
           </div>
 
           <button
@@ -241,64 +277,80 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
         </div>
       </div>
 
-      {/* Harvested Live Results Section */}
+      {/* Harvested Live Results */}
       {harvestedResults.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="font-extrabold text-2xl text-maroon-950 font-['Outfit'] flex items-center space-x-2">
+              <TrendingUp className="w-6 h-6 text-emerald-600" />
               <span>Live Harvested Stream</span>
               <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
                 {harvestedResults.length} New Prospects Injected
               </span>
             </h3>
-            <span className="text-xs text-gray-500 font-mono">Automated Trust Scoring &amp; Audit complete</span>
+            <span className="text-xs text-gray-500 font-mono hidden sm:inline">Trust Scoring & Audit complete</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {harvestedResults.map((lead) => (
               <div 
                 key={lead.id} 
-                className="bg-white rounded-3xl p-6 border-2 border-emerald-500 shadow-xl space-y-4 hover:border-maroon-600 transition-all group relative overflow-hidden"
+                className="bg-white rounded-3xl p-6 border-2 border-emerald-400 shadow-xl space-y-4 hover:border-maroon-600 transition-all group relative overflow-hidden"
               >
-                <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow">
+                {/* Score Badge */}
+                <div className={`absolute top-0 right-0 text-white text-[10px] font-extrabold px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow ${lead.score >= 88 ? 'bg-emerald-600' : 'bg-amber-500'}`}>
                   Score: {lead.score}/100
                 </div>
 
+                {/* Business Info */}
                 <div className="space-y-1 pr-20">
                   <div className="flex items-center space-x-2">
                     <span className="p-1 rounded bg-maroon-50 text-maroon-700">
                       <Building2 className="w-4 h-4" />
                     </span>
-                    <h4 className="font-extrabold text-lg text-maroon-950 group-hover:text-maroon-700 transition-colors">{lead.businessName}</h4>
+                    <h4 className="font-extrabold text-base text-maroon-950 group-hover:text-maroon-700 transition-colors leading-tight">{lead.businessName}</h4>
                   </div>
-                  <p className="text-xs text-gray-600">📍 {lead.location} &bull; ⭐️ {lead.rating} ({lead.reviewCount} Reviews)</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-bold text-gray-500 uppercase">Operational Bottleneck Detected:</span>
-                    <span className="text-maroon-800 font-extrabold font-mono">${lead.estimatedDealValue || 750} Value</span>
-                  </div>
-                  <p className="font-semibold text-red-700">{lead.needDetected}</p>
-                  <div className="pt-2 border-t border-gray-200/80 flex items-center justify-between text-gray-600">
-                    <span>Verified Contact: <strong className="text-gray-900">{lead.phone}</strong></span>
-                    <span>C-Level: <strong className="text-maroon-900">{lead.decisionMaker}</strong></span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="bg-blue-50 text-blue-800 text-[10px] font-extrabold px-2 py-1 rounded flex items-center space-x-1 border border-blue-200">
-                      <PhoneCall className="w-3 h-3" />
-                      <span>{lead.outreachChannel} Queued</span>
+                  <p className="text-xs text-gray-500 flex items-center space-x-1">
+                    <MapPin className="w-3 h-3 shrink-0" />
+                    <span>{lead.location}</span>
+                  </p>
+                  <div className="flex items-center space-x-3 text-xs">
+                    <span className="flex items-center space-x-1 text-yellow-600 font-bold">
+                      <Star className="w-3 h-3" />
+                      <span>{lead.rating} ({lead.reviewCount})</span>
                     </span>
+                    <span className="text-gray-400">|</span>
+                    <span className="font-bold text-maroon-700 font-mono">${lead.estimatedDealValue} Deal</span>
                   </div>
+                </div>
 
+                {/* Gap Analysis */}
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 space-y-1.5 text-xs">
+                  <div className="flex items-center space-x-1.5 font-extrabold text-red-800">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Gap Detected:</span>
+                  </div>
+                  <p className="text-red-700 font-semibold leading-snug">{lead.needDetected}</p>
+                </div>
+
+                {/* Pitch */}
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1 text-xs">
+                  <div className="font-extrabold text-emerald-800 uppercase tracking-wider text-[10px]">Recommended Pitch:</div>
+                  <p className="font-bold text-emerald-900">{lead.serviceRecommended}</p>
+                </div>
+
+                {/* Contact & CTA */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center space-x-1.5 text-xs text-gray-600">
+                    <PhoneCall className="w-3.5 h-3.5 text-maroon-600" />
+                    <span className="font-bold">{lead.phone}</span>
+                  </div>
                   <button
                     onClick={() => onSelectLeadForAudit(lead)}
                     className="bg-maroon-700 hover:bg-maroon-800 text-white font-extrabold px-4 py-2 rounded-xl transition-all shadow text-xs flex items-center space-x-1.5 font-['Outfit']"
                   >
-                    <span>Inspect Full Digital Audit</span>
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Full Audit</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
