@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Lead, ActivityLog, LeadStatus, FollowUpStage } from './types';
 import { INITIAL_LEADS, INITIAL_LOGS } from './data/mockLeads';
 import { Navbar } from './components/Navbar';
+import { LoginPage } from './components/LoginPage';
 import { Dashboard } from './components/Dashboard';
 import { LeadHunter } from './components/LeadHunter';
 import { DigitalAudit } from './components/DigitalAudit';
@@ -14,6 +15,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { AddLeadModal } from './components/AddLeadModal';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
   const [logs, setLogs] = useState<ActivityLog[]>(INITIAL_LOGS);
@@ -110,6 +112,11 @@ export default function App() {
   const hotLeadsCount = leads.filter(l => l.score >= 80).length;
   const pendingApprovals = leads.filter(l => !l.approved).length;
 
+  // Unauthenticated view renders the premium Login Page
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fdfafb] text-[#1a1516] font-sans">
       
@@ -119,6 +126,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         hotLeadsCount={hotLeadsCount}
         pendingApprovals={pendingApprovals}
+        onLogout={() => setIsAuthenticated(false)}
       />
 
       {/* Main Tab Render */}
