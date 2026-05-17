@@ -175,7 +175,7 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
               <MapPin className="w-3.5 h-3.5 text-maroon-600" />
               <span>Target Cluster</span>
             </label>
@@ -194,7 +194,7 @@ export const LeadHunter: React.FC<LeadHunterProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
               <Filter className="w-3.5 h-3.5 text-maroon-600" />
               <span>Target Niche</span>
             </label>
