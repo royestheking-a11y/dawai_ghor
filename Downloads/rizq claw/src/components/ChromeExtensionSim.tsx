@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import JSZip from 'jszip';
 import type { Lead, LeadCategory } from '../types';
 import { 
   Compass, 
@@ -27,6 +28,199 @@ export const ChromeExtensionSim: React.FC<ChromeExtensionSimProps> = ({
   const [simCategory, setSimCategory] = useState<LeadCategory>('Restaurant');
   const [isSimulating, setIsSimulating] = useState(false);
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadZip = async () => {
+    setIsDownloading(true);
+    try {
+      const zip = new JSZip();
+
+      // manifest.json
+      const manifest = {
+        manifest_version: 3,
+        name: "RizQ Claw - Lead Extractor",
+        version: "1.2.0",
+        description: "Instantly extract business contact data, run digital gap audits, and inject leads into the RizQ Claw CRM pipeline with one click.",
+        permissions: ["activeTab", "scripting", "storage"],
+        action: { default_popup: "popup.html", default_icon: { "48": "icon48.png" } },
+        content_scripts: [{ matches: ["https://www.google.com/maps/*", "https://*.facebook.com/*", "https://*.linkedin.com/*"], js: ["content.js"] }],
+        background: { service_worker: "background.js" },
+        icons: { "48": "icon48.png", "128": "icon128.png" }
+      };
+      zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+      // popup.html
+      const popupHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RizQ Claw</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { width: 320px; min-height: 400px; background: #fdfafb; color: #1a1516; }
+    .header { background: linear-gradient(135deg, #7f1d1d, #450a0a); color: white; padding: 16px; display: flex; align-items: center; gap: 10px; }
+    .header h1 { font-size: 16px; font-weight: 800; }
+    .header span { font-size: 10px; opacity: 0.75; display: block; }
+    .status { padding: 12px 16px; background: #f0fdf4; border-bottom: 1px solid #d1fae5; font-size: 11px; font-weight: 600; color: #065f46; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .body { padding: 16px; space-y: 12px; }
+    button { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: 800; font-size: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; }
+    .btn-primary { background: linear-gradient(135deg, #991b1b, #7f1d1d); color: white; }
+    .btn-primary:hover { background: linear-gradient(135deg, #7f1d1d, #450a0a); }
+    .btn-secondary { background: #f9fafb; border: 1px solid #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #f3f4f6; }
+    #status-msg { font-size: 11px; text-align: center; color: #6b7280; padding: 8px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>🦅 RizQ Claw</h1>
+      <span>Enterprise Lead Extractor v1.2</span>
+    </div>
+  </div>
+  <div class="status">
+    <span class="dot"></span>
+    Extension Active &amp; Scanning Page…
+  </div>
+  <div class="body">
+    <button class="btn-primary" id="extractBtn">⚡ Save to RizQ Claw</button>
+    <button class="btn-secondary" id="auditBtn">🔍 Run Digital Audit</button>
+    <button class="btn-secondary" id="openDashboard">📊 Open Dashboard</button>
+    <div id="status-msg">Hover over a business on Google Maps or Facebook to extract.</div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>`;
+      zip.file("popup.html", popupHtml);
+
+      // popup.js
+      const popupJs = `document.getElementById('extractBtn').addEventListener('click', () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      files: ['content.js']
+    });
+    document.getElementById('status-msg').textContent = '✅ Extraction triggered! Check your RizQ Claw dashboard.';
+    document.getElementById('status-msg').style.color = '#065f46';
+  });
+});
+
+document.getElementById('auditBtn').addEventListener('click', () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.storage.local.set({ audit_url: tabs[0].url });
+    document.getElementById('status-msg').textContent = '🔍 Digital audit queued for this domain.';
+  });
+});
+
+document.getElementById('openDashboard').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'http://localhost:5173' });
+});`;
+      zip.file("popup.js", popupJs);
+
+      // content.js
+      const contentJs = `(function() {
+  const url = window.location.href;
+  let data = { url, title: document.title, timestamp: new Date().toISOString() };
+
+  // Google Maps extraction
+  if (url.includes('google.com/maps')) {
+    const nameEl = document.querySelector('h1.DUwDvf, [data-item-id] h1');
+    const phoneEl = document.querySelector('[data-tooltip="Copy phone number"]');
+    const ratingEl = document.querySelector('.ceNzKf span, .MW4etd');
+    if (nameEl) data.businessName = nameEl.textContent.trim();
+    if (phoneEl) data.phone = phoneEl.closest('[aria-label]')?.getAttribute('aria-label') || '';
+    if (ratingEl) data.rating = parseFloat(ratingEl.textContent);
+  }
+
+  // Facebook Page extraction
+  if (url.includes('facebook.com')) {
+    const titleEl = document.querySelector('h1');
+    if (titleEl) data.businessName = titleEl.textContent.trim();
+    data.facebook = url;
+  }
+
+  // LinkedIn extraction
+  if (url.includes('linkedin.com/company')) {
+    const nameEl = document.querySelector('h1');
+    if (nameEl) data.businessName = nameEl.textContent.trim();
+    data.linkedin = url;
+  }
+
+  chrome.storage.local.get('rizq_leads', (result) => {
+    const leads = result.rizq_leads || [];
+    leads.push(data);
+    chrome.storage.local.set({ rizq_leads: leads });
+    console.log('[RizQ Claw] Lead extracted and queued:', data);
+  });
+
+  // Visual feedback flash
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;background:#7f1d1d;color:white;padding:14px 20px;border-radius:12px;font-family:sans-serif;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,0.25);';
+  flash.textContent = '✅ RizQ Claw: Lead saved to pipeline!';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 3000);
+})();`;
+      zip.file("content.js", contentJs);
+
+      // background.js
+      const backgroundJs = `chrome.runtime.onInstalled.addListener(() => {
+  console.log('[RizQ Claw] Extension installed successfully. Version 1.2');
+  chrome.storage.local.set({ rizq_leads: [], rizq_version: '1.2.0' });
+});
+
+chrome.action.onClicked.addListener((tab) => {
+  chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+});`;
+      zip.file("background.js", backgroundJs);
+
+      // README.md
+      const readme = `# RizQ Claw Chrome Extension v1.2
+
+## Installation
+1. Unzip this package to a folder on your computer
+2. Open Chrome/Brave and go to: chrome://extensions
+3. Enable **Developer Mode** (toggle top-right)
+4. Click **Load unpacked** and select the unzipped folder
+5. The RizQ Claw icon will appear in your browser toolbar
+
+## Usage
+- Navigate to **Google Maps**, **Facebook Pages**, or **LinkedIn Company** profiles
+- Click the **RizQ Claw** icon in your toolbar
+- Click **"Save to RizQ Claw"** to extract the business lead
+- Open your **RizQ Claw Dashboard** to see the lead, trigger a digital audit, and generate AI outreach copy
+
+## Supported Platforms
+- Google Maps (restaurants, clinics, gyms, pharmacies, etc.)
+- Facebook Business Pages
+- LinkedIn Company Profiles
+
+## Permissions Required
+- **activeTab**: Read the currently active page to extract business data
+- **scripting**: Inject the data extraction script on supported pages
+- **storage**: Cache extracted leads locally until synced to dashboard
+
+---
+Built by RizQara Tech Ltd. © 2026`;
+      zip.file("README.md", readme);
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rizq-claw-extension-v1.2.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("ZIP generation failed:", err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const handleSimulateSave = () => {
     setIsSimulating(true);
@@ -114,9 +308,17 @@ export const ChromeExtensionSim: React.FC<ChromeExtensionSimProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>v1.2 (Active &amp; Linked)</span>
             </div>
-            <button className="w-full bg-white text-maroon-900 font-bold px-4 py-2 rounded-xl text-xs shadow hover:bg-maroon-50 transition-all flex items-center justify-center space-x-1.5 mt-2">
-              <Download className="w-3.5 h-3.5" />
-              <span>Download .ZIP Package</span>
+            <button
+              onClick={handleDownloadZip}
+              disabled={isDownloading}
+              className="w-full bg-white text-maroon-900 font-bold px-4 py-2 rounded-xl text-xs shadow hover:bg-maroon-50 transition-all flex items-center justify-center space-x-1.5 mt-2 disabled:opacity-75 cursor-pointer"
+            >
+              {isDownloading ? (
+                <div className="w-3.5 h-3.5 border-2 border-maroon-700 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>{isDownloading ? 'Packaging…' : 'Download .ZIP Package'}</span>
             </button>
           </div>
         </div>
