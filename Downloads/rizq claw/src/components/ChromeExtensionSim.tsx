@@ -30,10 +30,48 @@ export const ChromeExtensionSim: React.FC<ChromeExtensionSimProps> = ({
   const [successLead, setSuccessLead] = useState<Lead | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Helper: draws a branded RizQ Claw icon at given size and returns a base64 PNG blob
+  const generateIconBlob = (size: number): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+
+      // Background: deep maroon circle
+      ctx.fillStyle = '#7f1d1d';
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner gold ring
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = size * 0.05;
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2 - size * 0.08, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Letter "R" in white
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `900 ${Math.floor(size * 0.5)}px Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('R', size / 2, size / 2 + size * 0.02);
+
+      canvas.toBlob((blob) => resolve(blob!), 'image/png');
+    });
+  };
+
   const handleDownloadZip = async () => {
     setIsDownloading(true);
     try {
       const zip = new JSZip();
+
+      // Generate real PNG icons
+      const icon48Blob  = await generateIconBlob(48);
+      const icon128Blob = await generateIconBlob(128);
+      zip.file("icon48.png",  icon48Blob);
+      zip.file("icon128.png", icon128Blob);
 
       // manifest.json
       const manifest = {
