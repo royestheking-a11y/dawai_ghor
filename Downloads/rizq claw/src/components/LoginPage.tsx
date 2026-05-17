@@ -129,7 +129,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <Icon className={`w-4 h-4 ${m.color}`} />
                   </div>
                   <div>
-                    <div className="text-2xl sm:text-3xl font-extrabold font-['Outfit'] tracking-tight text-white mt-2 font-mono">
+                    <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mt-2 font-mono">
                       {m.val}
                     </div>
                     <div className="text-[10px] text-gray-400 mt-1 line-clamp-1">
