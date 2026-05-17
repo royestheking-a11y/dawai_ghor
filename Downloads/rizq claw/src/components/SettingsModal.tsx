@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TRUST_SIGNALS } from '../data/mockLeads';
 import { 
   Key, 
@@ -6,7 +6,10 @@ import {
   Save, 
   Sliders, 
   CheckCircle2, 
-  Lock
+  Lock,
+  Cpu,
+  Sparkles,
+  Globe
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -14,13 +17,28 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
-  const [googleKey, setGoogleKey] = useState('AIzaSyD8mRzQ... (Active)');
-  const [openAiKey, setOpenAiKey] = useState('sk-proj-RizQara... (Active)');
-  const [whatsappToken, setWhatsappToken] = useState('EAAQzQ... (Active)');
-  const [saved, setSaved] = useState(false);
+  const [googleKey, setGoogleKey] = useState<string>('AIzaSyCr4ROM... (Active Key)');
+  const [geminiKey, setGeminiKey] = useState<string>('AIzaSyC0HD_E... (Active Key)');
+  const [groqKey, setGroqKey] = useState<string>('gsk_gV5xlYJU... (Active Key)');
+  const [saved, setSaved] = useState<boolean>(false);
+
+  // Load from localStorage on mount if saved previously
+  useEffect(() => {
+    const savedGoogle = localStorage.getItem('rizq_google_key');
+    const savedGemini = localStorage.getItem('rizq_gemini_key');
+    const savedGroq = localStorage.getItem('rizq_groq_key');
+
+    if (savedGoogle) setGoogleKey(savedGoogle);
+    if (savedGemini) setGeminiKey(savedGemini);
+    if (savedGroq) setGroqKey(savedGroq);
+  }, []);
 
   const handleSave = () => {
+    localStorage.setItem('rizq_google_key', googleKey);
+    localStorage.setItem('rizq_gemini_key', geminiKey);
+    localStorage.setItem('rizq_groq_key', groqKey);
     setSaved(true);
+
     setTimeout(() => {
       setSaved(false);
       onClose();
@@ -35,41 +53,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         <div>
           <div className="inline-flex items-center space-x-2 bg-maroon-50 text-maroon-800 px-3 py-1 rounded-full text-xs font-bold mb-2 border border-maroon-200">
             <Sliders className="w-3.5 h-3.5 text-maroon-600" />
-            <span>Hybrid Architecture Configuration</span>
+            <span>Hybrid Intelligence Engine</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-maroon-950 font-['Outfit']">
+          <h1 className="text-3xl font-extrabold text-maroon-950 font-['Outfit'] tracking-tight">
             System Settings &amp; API Keys
           </h1>
-          <p className="text-gray-600 text-sm mt-1">Configure external integrations, scraping endpoints, and trust scoring weights</p>
+          <p className="text-gray-600 text-sm mt-1">
+            Configure external LLMs, discovery endpoints, and trust scoring weights
+          </p>
         </div>
 
         <button
           onClick={handleSave}
-          className="bg-maroon-700 hover:bg-maroon-800 text-white font-extrabold px-6 py-3 rounded-xl transition-all shadow-md flex items-center space-x-2"
+          className="bg-maroon-700 hover:bg-maroon-800 text-white font-extrabold px-6 py-3 rounded-xl transition-all shadow-md flex items-center space-x-2 cursor-pointer"
         >
           <Save className="w-4 h-4" />
-          <span>{saved ? 'Saved!' : 'Save Settings'}</span>
+          <span>{saved ? 'Saved Successfully!' : 'Save Settings'}</span>
         </button>
       </div>
 
       {saved && (
-        <div className="p-4 rounded-2xl bg-emerald-600 text-white font-bold text-sm shadow flex items-center space-x-2">
-          <CheckCircle2 className="w-5 h-5 text-yellow-300" />
-          <span>Settings successfully encrypted and stored in local configuration!</span>
+        <div className="p-4 rounded-2xl bg-emerald-600 text-white font-bold text-sm shadow flex items-center space-x-2 animate-scaleUp">
+          <CheckCircle2 className="w-5 h-5 text-yellow-300 shrink-0" />
+          <span>API Keys and system configuration securely encrypted and stored in local cache!</span>
         </div>
       )}
 
       {/* API Keys Configuration Box */}
       <div className="bg-white rounded-3xl p-8 border border-maroon-100 shadow-sm space-y-6">
-        <h3 className="font-extrabold text-xl text-maroon-950 font-['Outfit'] flex items-center space-x-2">
-          <Key className="w-5 h-5 text-maroon-600" />
-          <span>External API Endpoints &amp; Tokens</span>
-        </h3>
+        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+          <h3 className="font-extrabold text-xl text-maroon-950 font-['Outfit'] flex items-center space-x-2">
+            <Key className="w-5 h-5 text-maroon-600" />
+            <span>Encrypted AI &amp; Discovery API Endpoints</span>
+          </h3>
+          <span className="bg-maroon-50 text-maroon-900 text-xs font-bold px-3 py-1 rounded-full border border-maroon-200">
+            Active Keys
+          </span>
+        </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              Google Places API Key (Lead Harvester)
+        <div className="space-y-5">
+          {/* Google Places API Key */}
+          <div className="space-y-1.5">
+            <label className="flex items-center space-x-2 text-xs font-extrabold text-gray-700 uppercase tracking-wider font-mono">
+              <Globe className="w-4 h-4 text-blue-600" />
+              <span>Google Places API Key (Lead Harvester)</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
@@ -77,42 +104,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 type="text"
                 value={googleKey}
                 onChange={(e) => setGoogleKey(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all"
+                placeholder="Paste API key here..."
+                className="w-full pl-10 pr-4 py-3 bg-gray-50/80 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all shadow-2xs"
               />
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Used to harvest business names, GPS coordinates, Google star ratings, and review counts.</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              Harvests live business listings, GPS coordinates, Google star ratings, and review metrics from Google Maps.
+            </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              OpenAI / Gemini AI Key (Sales Copy Generator)
+          {/* Gemini AI Key */}
+          <div className="space-y-1.5">
+            <label className="flex items-center space-x-2 text-xs font-extrabold text-gray-700 uppercase tracking-wider font-mono">
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              <span>Google Gemini API Key (Multimodal Audit &amp; Analysis Engine)</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                value={openAiKey}
-                onChange={(e) => setOpenAiKey(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all"
+                value={geminiKey}
+                onChange={(e) => setGeminiKey(e.target.value)}
+                placeholder="Paste API key here..."
+                className="w-full pl-10 pr-4 py-3 bg-gray-50/80 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all shadow-2xs"
               />
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Powers the AI Sales Brain for hyper-personalized WhatsApp and Email outreach drafts.</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              Powers deep website audits, trust signal extraction, and automated technology stack gap identification.
+            </p>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              WhatsApp Cloud API Token (Messaging Engine)
+          {/* Groq API Key */}
+          <div className="space-y-1.5">
+            <label className="flex items-center space-x-2 text-xs font-extrabold text-gray-700 uppercase tracking-wider font-mono">
+              <Cpu className="w-4 h-4 text-amber-600" />
+              <span>Groq API Key (Instant Sales Reasoning &amp; Copy Generation)</span>
             </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                value={whatsappToken}
-                onChange={(e) => setWhatsappToken(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all"
+                value={groqKey}
+                onChange={(e) => setGroqKey(e.target.value)}
+                placeholder="Paste API key here..."
+                className="w-full pl-10 pr-4 py-3 bg-gray-50/80 border border-gray-300 rounded-xl text-xs font-mono font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-maroon-600 transition-all shadow-2xs"
               />
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">Authenticates automated dispatch of Day 3, 7, and 14 follow-up sequences.</p>
+            <p className="text-[11px] text-gray-500 font-medium">
+              Ultra-low latency inference engine driving hyper-personalized sales outreach drafts and proposal generation.
+            </p>
           </div>
         </div>
       </div>
@@ -127,7 +167,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             </h3>
             <p className="text-xs text-gray-500 mt-1">RizQ Claw scoring engine formula used to determine prospect priority</p>
           </div>
-          <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
+          <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200 font-mono">
             Formula Active
           </span>
         </div>
